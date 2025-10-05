@@ -10,20 +10,20 @@ items = [
     'fee', 'future', 'global', 'growth', 'join', 'lease', 'mine', 'network', 'node',
     'official', 'pool', 'portal', 'power', 'release', 'rent', 'saving', 'secure',
     'smart', 'stake', 'update', 'usdt', 'wallet'
-]  # 29 个（你的仓库文件夹，排除 trx）
+]  # 29 个原来的文件夹（排除 trx）
 
 # 读取模板
 with open(template_file, 'r', encoding='utf-8') as f:
     template_content = f.read()
 
-print("模板读取成功！开始生成 29 个页面...")
+print("模板读取成功！开始生成 29 个原来的中转页...")
 
-# 为每个项目生成
+# 为每个生成
 for item in items:
     content = template_content
     
-    # 修改 h1/title（第一行 # ...，全英文）
-    item_cap = item.capitalize()  # e.g., 'boost' → 'Boost', 'usdt' → 'Usdt'
+    # 修改 h1/title（第一行 # ...，全英文，首字母大写）
+    item_cap = item.capitalize()  # e.g., 'boost' → 'Boost'
     h1_new = f'# 🌐 {item_cap} Energy Rental · Global Edition'
     content = re.sub(r'^# .*$', h1_new, content, flags=re.MULTILINE)
     
@@ -37,7 +37,7 @@ for item in items:
     dir_path = item
     os.makedirs(dir_path, exist_ok=True)
     
-    # 保存 index.html（覆盖如果存在）
+    # 保存 index.html
     new_file = os.path.join(dir_path, 'index.html')
     with open(new_file, 'w', encoding='utf-8') as f:
         f.write(content)
@@ -48,4 +48,4 @@ for item in items:
         print(f'❌ Failed: {dir_path}/index.html')
 
 print('Batch complete! 检查: dir boost （看 index.html）')
-print('上传: git add . && git commit -m "Batch add 29 index.html for folders" && git push')
+print('上传: git add . && git commit -m "Add 29 original folder English variant pages" && git push')
