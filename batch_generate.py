@@ -1,5 +1,6 @@
 import os
-import re
+import re  # 加了这行，修复 NameError
+from bs4 import BeautifulSoup
 from datetime import datetime, timedelta
 import random
 
@@ -14,38 +15,54 @@ items = [
 
 # 读取模板
 with open(template_file, 'r', encoding='utf-8') as f:
-    template_content = f.read()
+    template_html = f.read()
+
+soup_template = BeautifulSoup(template_html, 'html.parser')
+
+# 调试打印原值
+title_old = soup_template.find('title').text if soup_template.find('title') else 'No title'
+h1_old = soup_template.find('h1').text if soup_template.find('h1') else 'No h1'
+date_old = 'No date'
+date_p = soup_template.find('p', string=re.compile(r'Last updated: \d{4}-\d{2}-\d{2}'))
+if date_p:
+    date_old = date_p.text
+print(f"原 title: '{title_old}'")
+print(f"原 h1: '{h1_old}'")
+print(f"原日期: '{date_old}'")
 
 print("模板读取成功！开始生成 29 个原来的中转页...")
 
 # 为每个生成
 for item in items:
-    content = template_content
+    # 复制模板
+    soup = BeautifulSoup(template_html, 'html.parser')
     
-    # 修改 h1/title（第一行 # ...，全英文，首字母大写）
-    item_cap = item.capitalize()  # e.g., 'boost' → 'Boost'
-    h1_new = f'# 🌐 {item_cap} Energy Rental · Global Edition'
-    content = re.sub(r'^# .*$', h1_new, content, flags=re.MULTILINE)
+    # 修改 <title>（英文）
+    title_tag = soup.find('title')
+    if title_tag:
+        title_tag.string = f'🌐 {item.capitalize()} Energy Rental · Global Edition'
     
-    # 修改日期（随机 2025-10-01 到 10-05）
+    # 修改 <h1>（英文，第一个 h1）
+    h1_tag = soup.find('h1')
+    if h1_tag:
+        h1_tag.string = f'🌐 {item.capitalize()} Energy Rental · Global Edition'
+    
+    # 修改日期（随机 2025-10-01 到 10-05，匹配 p 标签文本）
     start_date = datetime(2025, 10, 1)
     random_days = random.randint(0, 4)
     mod_date = (start_date + timedelta(days=random_days)).strftime('%Y-%m-%d')
-    content = content.replace('Last updated: 2025-10-05', f'Last updated: {mod_date}')
+    date_p = soup.find('p', string=re.compile(r'Last updated: \d{4}-\d{2}-\d{2}'))
+    if date_p:
+        date_p.string = f'Last updated: {mod_date}'
     
-    # 创建/确保子文件夹
+    # 保存
     dir_path = item
     os.makedirs(dir_path, exist_ok=True)
-    
-    # 保存 index.html
     new_file = os.path.join(dir_path, 'index.html')
     with open(new_file, 'w', encoding='utf-8') as f:
-        f.write(content)
+        f.write(str(soup))
     
-    if os.path.exists(new_file):
-        print(f'✅ Generated: {dir_path}/index.html | Title/H1: "{h1_new}" | Date: {mod_date}')
-    else:
-        print(f'❌ Failed: {dir_path}/index.html')
+    print(f'✅ Generated: {dir_path}/index.html | New Title/H1: "🌐 {item.capitalize()} Energy Rental · Global Edition" | New Date: {mod_date}')
 
-print('Batch complete! 检查: dir boost （看 index.html）')
-print('上传: git add . && git commit -m "Add 29 original folder English variant pages" && git push')
+print('Batch complete! 记事本打开 boost/index.html 检查 <title> 和 <h1>！')
+print('上传: git add . && git commit -m "Fix HTML title/h1 for 29 pages" && git push')
